@@ -121,6 +121,10 @@ class TaggedString {
     toString(): string {
         return this.text;
     }
+
+    getMaxScale() {
+        return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
+    }
 }
 
 function breakLines(input: TaggedString, lineBreakPoints: Array<number>): Array<TaggedString> {
@@ -446,12 +450,13 @@ function shapeLines(shaping: Shaping,
     for (const line of lines) {
         line.trim();
 
+        const lineMaxScale = line.getMaxScale();
+
         if (!line.length()) {
             y += lineHeight; // Still need a line feed after empty line
             continue;
         }
 
-        let maxScale = 0;
         const lineStartIndex = positionedGlyphs.length;
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
@@ -459,12 +464,11 @@ function shapeLines(shaping: Shaping,
             // We don't know the baseline, but since we're laying out
             // at 24 points, we can calculate how much it will move when
             // we scale up or down.
-            const baselineOffset = (1 - section.scale) * 24;
+            const baselineOffset = (lineMaxScale - section.scale) * 24;
             const glyph = glyphMap[section.fontStack][codePoint];
 
             if (!glyph) continue;
 
-            maxScale = Math.max(maxScale, section.scale);
             if (!charHasUprightVerticalOrientation(codePoint) || writingMode === WritingMode.horizontal) {
                 positionedGlyphs.push({glyph: codePoint, x, y: y + baselineOffset, vertical: false, scale: section.scale, fontStack: section.fontStack});
                 x += glyph.metrics.advance * section.scale + spacing;
@@ -483,14 +487,14 @@ function shapeLines(shaping: Shaping,
         }
 
         x = 0;
-        y += lineHeight * maxScale;
+        y += lineHeight * lineMaxScale;
     }
 
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(textAnchor);
     align(positionedGlyphs, justify, horizontalAlign, verticalAlign, maxLineLength, lineHeight, lines.length);
 
     // Calculate the bounding box
-    const height = lines.length * lineHeight;
+    const height = y - yOffset;
 
     shaping.top += -verticalAlign * height;
     shaping.bottom = shaping.top + height;
