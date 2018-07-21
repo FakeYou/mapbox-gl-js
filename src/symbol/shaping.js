@@ -456,16 +456,20 @@ function shapeLines(shaping: Shaping,
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
             const codePoint = line.getCharCode(i);
+            // We don't know the baseline, but since we're laying out
+            // at 24 points, we can calculate how much it will move when
+            // we scale up or down.
+            const baselineOffset = (1 - section.scale) * 24;
             const glyph = glyphMap[section.fontStack][codePoint];
 
             if (!glyph) continue;
 
             maxScale = Math.max(maxScale, section.scale);
             if (!charHasUprightVerticalOrientation(codePoint) || writingMode === WritingMode.horizontal) {
-                positionedGlyphs.push({glyph: codePoint, x, y, vertical: false, scale: section.scale, fontStack: section.fontStack});
+                positionedGlyphs.push({glyph: codePoint, x, y: y + baselineOffset, vertical: false, scale: section.scale, fontStack: section.fontStack});
                 x += glyph.metrics.advance * section.scale + spacing;
             } else {
-                positionedGlyphs.push({glyph: codePoint, x, y: 0, vertical: true, scale: section.scale, fontStack: section.fontStack});
+                positionedGlyphs.push({glyph: codePoint, x, y: baselineOffset, vertical: true, scale: section.scale, fontStack: section.fontStack});
                 x += verticalHeight * section.scale + spacing;
             }
         }
