@@ -70,23 +70,32 @@ class CompoundExpression implements Expression {
         let signatureContext: ParsingContext = (null: any);
 
         for (const [params, evaluate] of overloads) {
+            // Use a fresh context for each attempted signature so that, if
+            // we eventually succeed, we haven't polluted `context.errors`.
+            signatureContext = new ParsingContext(context.registry, context.path, null, context.scope);
+
             // First parse all the args, potentially coercing to the
             // types expected by this overload.
             const parsedArgs: Array<Expression> = [];
+            let argParseFailed = false;
             for (let i = 1; i < args.length; i++) {
                 const arg = args[i];
                 const expectedType = Array.isArray(params) ?
                     params[i - 1] :
                     params.type;
 
-                const parsed = context.parse(arg, 1 + parsedArgs.length, expectedType);
-                if (!parsed) return null;
+                const parsed = signatureContext.parse(arg, 1 + parsedArgs.length, expectedType);
+                if (!parsed) {
+                    argParseFailed = true;
+                    break;
+                }
                 parsedArgs.push(parsed);
             }
-
-            // Use a fresh context for each attempted signature so that, if
-            // we eventually succeed, we haven't polluted `context.errors`.
-            signatureContext = new ParsingContext(context.registry, context.path, null, context.scope);
+            if (argParseFailed) {
+                // Couldn't coerce args of this overload to expected type, move
+                // on to next one.
+                continue;
+            }
 
             if (Array.isArray(params)) {
                 if (params.length !== parsedArgs.length) {
