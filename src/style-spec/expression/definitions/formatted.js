@@ -95,7 +95,8 @@ export class FormattedExpression implements Expression {
     }
 
     possibleOutputs() {
-        // TODO: think about right answer here
+        // Technically the combinatoric set of all children
+        // Usually, this.text will be undefined anyway
         return [undefined];
     }
 

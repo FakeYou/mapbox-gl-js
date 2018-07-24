@@ -114,7 +114,6 @@ class ParsingContext {
                             parsed = new Coercion(expected, [parsed]);
                         }
                     } else if (expected.kind === 'formatted' && (actual.kind === 'value' || actual.kind === 'string')) {
-                        // TODO: this isn't working yet
                         if (!options.omitTypeAnnotations) {
                             parsed = new Coercion(expected, [parsed]);
                         }

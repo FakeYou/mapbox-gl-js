@@ -131,7 +131,8 @@ export function getGlyphQuads(anchor: Anchor,
 
     for (let k = 0; k < positionedGlyphs.length; k++) {
         const positionedGlyph = positionedGlyphs[k];
-        const glyph = positions[positionedGlyph.fontStack][positionedGlyph.glyph];
+        const glyphPositions = positions[positionedGlyph.fontStack];
+        const glyph = glyphPositions && glyphPositions[positionedGlyph.glyph];
         if (!glyph) continue;
 
         const rect = glyph.rect;
