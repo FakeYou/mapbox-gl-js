@@ -2,6 +2,7 @@
 
 import assert from 'assert';
 import { isValue, typeOf, Color } from '../values';
+import { Formatted } from './formatted';
 
 import type { Type } from '../types';
 import type { Value }  from '../values';
@@ -60,11 +61,17 @@ class Literal implements Expression {
             // couldn't actually generate with a "literal" expression,
             // so we have to implement an equivalent serialization here
             return ["rgba"].concat(this.value.toArray());
+        } else if (this.value instanceof Formatted) {
+            // Constant-folding can generate Literal expressions that you
+            // couldn't actually generate with a "literal" expression,
+            // so we have to implement an equivalent serialization here
+            return this.value.serialize();
         } else {
             assert(this.value === null ||
                 typeof this.value === 'string' ||
                 typeof this.value === 'number' ||
-                typeof this.value === 'boolean');
+                typeof this.value === 'boolean' ||
+                typeof this.value === 'formatted');
             return (this.value: any);
         }
     }

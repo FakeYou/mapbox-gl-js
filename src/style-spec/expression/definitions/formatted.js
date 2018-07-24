@@ -18,6 +18,13 @@ export class FormattedSection {
         this.scale = scale;
         this.fontStack = fontStack;
     }
+
+    serialize() {
+        const fontStack = this.fontStack ?
+            ["literal", this.fontStack.split(',')] :
+            null;
+        return ["formatted", this.text, { "text-font": fontStack, "font-scale": this.scale }];
+    }
 }
 
 export class Formatted {
@@ -29,6 +36,14 @@ export class Formatted {
 
     toString(): string {
         return this.sections.map(section => section.text).join();
+    }
+
+    serialize() {
+        if (this.sections.length === 1) {
+            return this.sections[0].serialize();
+        } else {
+            return ["concat"].concat(this.sections.map(section => section.serialize()));
+        }
     }
 }
 
